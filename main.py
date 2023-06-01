@@ -993,7 +993,32 @@ class GportalUi():
         self.instance.insert(0, self.gmail_composer)
         self.instance[0].insertNewRow.connect(self.addNewRow)
         self.instance[0].appendData.connect(self.addData)
-        
+        #start api 
+        # Gather the email information from the user in the application
+        payload = {
+            "payload": {
+                "subject": "subject",
+                "email_list": "alaawaladi@gmail.com",
+                "body": "email_body"
+            },
+            "options": {
+                "selected_profiles": "alaaedine_mozilla_profile",
+                "browser_language": "english",
+                "send_limit_per_profile": 1,
+                "loop_profile": 1
+            }
+        }
+        api_url = "http://localhost:8000/send_email"
+        try:
+            response = requests.post(api_url, json=payload)
+            response_data = response.json()
+            print(response_data)
+        except requests.exceptions.RequestException as e:
+        # Handle any request errors
+            print(str(e))
+        # ...
+            raise
+        #end api 
         try:
             rowCount = len(self.instance) - 1
             self.instance[0].gmail_account(rowCount=rowCount, item=self.item, subject=self.subject, body=self.body, recipients=recipients, profile=self.profile, send_limit=self.send_limit)
