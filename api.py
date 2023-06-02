@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
-from models import EmailOptions, EmailPayload
+from models import EmailPayload, EmailOptions
+from typing import List
+
 app = FastAPI()
 
 # Add CORS middleware
@@ -14,18 +16,27 @@ app.add_middleware(
 
 class EmailPayload(BaseModel):
     subject: str
-    email_list: str
+    email_list: List[str]
     body: str
 
 class EmailOptions(BaseModel):
-    selected_profiles: str
+    selected_profiles: List[str]
     browser_language: str
     send_limit_per_profile: int
     loop_profile: int
 
-@app.post("/send_email")
+@app.post("/api/v1/emailcomposer")
 async def send_email(payload: EmailPayload, options: EmailOptions):
     # Print the received payload and options
+    if not options.selected_profiles:
+        return {"error": "Mozilla profile name is required"}
+    if not payload.subject:
+        return {"error": "Email subject is required"}
+    if not payload.email_list:
+        return {"error": "Email list is required"}
+    if not payload.body:
+        return {"error": "Email body is required"}
+    
     print("*"*50,"api.py","*"*50)
     
     print("Received Payload:", payload,"\n")
@@ -38,4 +49,3 @@ async def send_email(payload: EmailPayload, options: EmailOptions):
 
     # Return a response indicating success or failure
     return {"message": "Email sent successfully"}
-
