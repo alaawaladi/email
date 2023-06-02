@@ -9,6 +9,6 @@ class EmailOptions(BaseModel):
 
 class EmailPayload(BaseModel):
     subject: str
-    email_list: str
+    email_list: List[str]
     body: str
     options: EmailOptions
