@@ -970,7 +970,39 @@ class GportalUi():
                     break
                 self.profile = profile
                 self.gmail_composer_process()
+                
+    def send_email_via_api(self):
+        # API endpoint URL
+        api_url = "http://localhost:8000/api/v1/emailcomposer"
+        
+        try:
+            # Send the POST request to the API
+            response = requests.post(api_url, json=self.payload)
+            response_data = response.json()
+            print(response_data)
+            # Process the response data as needed
+            if response.status_code == 200:
+                # Successful response
+                message = response_data.get("message")
+                data = response_data.get("data")
 
+                # Process the data further
+                # ...
+
+            else:
+                # Error response
+                error_message = response_data.get("message")
+                # Handle the error appropriately
+                # ...
+
+            return response_data  # Return the response data to the caller
+
+        except requests.exceptions.RequestException as e:
+            # Handle any request errors
+            # ...
+            print(str(e))
+            raise
+            
     def gmail_composer_process(self):
         if self.stop_process or self.recipients == []:
             return
@@ -1005,7 +1037,7 @@ class GportalUi():
         loop_profile = self.loop
         
         # Prepare the payload
-        payload= {
+        self.payload= {
             "payload": {
             "subject": subject,
             "email_list": email_list,
@@ -1019,38 +1051,16 @@ class GportalUi():
             }
         }
 
-    # API endpoint URL
-        api_url = "http://localhost:8000/api/v1/emailcomposer"
+        
+        try :
+            # Call the function to send email via API
+            response_data = self.send_email_via_api()
 
-        try:
-            # Send the POST request to the API
-            response = requests.post(api_url, json=payload)
-            response_data = response.json()
-            print(response_data)
-            # Process the response data as needed
-            if response.status_code == 200:
-                # Successful response
-                message = response_data.get("message")
-                data = response_data.get("data")
-
-                # Process the data further
-                # ...
-
-            else:
-                # Error response
-                error_message = response_data.get("message")
-                # Handle the error appropriately
-                # ...
-
-            return response_data  # Return the response data to the caller
-
-        except requests.exceptions.RequestException as e:
-            # Handle any request errors
-            # ...
+        except Exception as e:
             print(str(e))
-            # raise
         #*********** end api **********
         try:
+            
             rowCount = len(self.instance) - 1
             self.instance[0].gmail_account(rowCount=rowCount, item=self.item, subject=self.subject, body=self.body, recipients=recipients, profile=self.profile, send_limit=self.send_limit)
             self.stop_process = self.instance[0].getStop_Composer_Process()
