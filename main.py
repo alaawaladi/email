@@ -17,8 +17,8 @@ from faker import Faker
 from datetime import datetime, timedelta
 from PySide2.QtWidgets import QApplication,QMessageBox,QTableWidgetItem,QFileDialog
 import PySide2
-# from models import EmailOptions, EmailPayload
-import models
+from models import EmailOptions, EmailPayload
+# import models
 
 # uncomment these lines before creating an Executable version for GportlaUi Project  
 if getattr(sys, 'frozen', False):
@@ -993,32 +993,63 @@ class GportalUi():
         self.instance.insert(0, self.gmail_composer)
         self.instance[0].insertNewRow.connect(self.addNewRow)
         self.instance[0].appendData.connect(self.addData)
-        #start api 
-        # Gather the email information from the user in the application
-        payload = {
+        #*********** start api **********
+        # Gather the email information from the user interface
+        subject = self.subject
+        email_list = recipients
+        body = self.body
+        # Gather the options for the email
+        selected_profiles = self.profiles
+        browser_language = self.item
+        send_limit_per_profile = self.send_limit
+        loop_profile = self.loop
+        
+        # Prepare the payload
+        payload= {
             "payload": {
-                "subject": "subject",
-                "email_list": "alaawaladi@gmail.com",
-                "body": "email_body"
+            "subject": subject,
+            "email_list": email_list,
+            "body": body,
             },
             "options": {
-                "selected_profiles": "alaaedine_mozilla_profile",
+                "selected_profiles": selected_profiles,
                 "browser_language": "english",
-                "send_limit_per_profile": 1,
-                "loop_profile": 1
+                "send_limit_per_profile": send_limit_per_profile,
+                "loop_profile": loop_profile
             }
         }
-        api_url = "http://localhost:8000/send_email"
+
+    # API endpoint URL
+        api_url = "http://localhost:8000/api/v1/emailcomposer"
+
         try:
+            # Send the POST request to the API
             response = requests.post(api_url, json=payload)
             response_data = response.json()
             print(response_data)
+            # Process the response data as needed
+            if response.status_code == 200:
+                # Successful response
+                message = response_data.get("message")
+                data = response_data.get("data")
+
+                # Process the data further
+                # ...
+
+            else:
+                # Error response
+                error_message = response_data.get("message")
+                # Handle the error appropriately
+                # ...
+
+            return response_data  # Return the response data to the caller
+
         except requests.exceptions.RequestException as e:
-        # Handle any request errors
+            # Handle any request errors
+            # ...
             print(str(e))
-        # ...
-            raise
-        #end api 
+            # raise
+        #*********** end api **********
         try:
             rowCount = len(self.instance) - 1
             self.instance[0].gmail_account(rowCount=rowCount, item=self.item, subject=self.subject, body=self.body, recipients=recipients, profile=self.profile, send_limit=self.send_limit)
@@ -1026,68 +1057,6 @@ class GportalUi():
         except Exception as e:
             return {"status": False, "message": f"Exception: {str(e)}"}
 
-    #******************* start api sections ************************
-    
-    def send_email_via_api(self, payload: models.EmailPayload, options: models.EmailOptions):
-    # Define the API endpoint URL
-        # api_url = "http://localhost:8000/send_email"
-        api_url = "http://localhost:8000"
-        # Print the payload and options
-        print("*"*50 ,"this data comming from app ","\n")
-        print("Payload:", payload)
-        print("Options:", options)
-        print("*"*50)
-        try:
-            # Send the POST request to the API
-            response = requests.post(api_url, json=payload.dict(),params=options.dict())
-            response_data = response.json()
-            print(response_data)
-            # Process the response data as needed
-            if response_data["status"] == "success":
-                # Successful response
-                message = response_data["message"]
-                data = response_data["data"]
-
-                # Process the data further
-                # ...
-
-            else:
-                # Error response
-                error_message = response_data["message"]
-                # Handle the error appropriately
-                # ...
-
-            return response_data  # Return the response data to the caller
-        except requests.exceptions.RequestException as e:
-            # Handle any request errors
-            print(str(e))
-            # ...
-            raise
-
-    def Gmail_Composer(self):
-        # ...
-
-        # Gather the email information from the user in the application
-        subject = self.subject
-        email_list = self.recipients
-        body = self.body
-        options = models.EmailOptions(
-            selected_profiles=self.profiles,
-            browser_language="english",
-            send_limit_per_profile=self.send_limit,
-            loop_profile=self.loop
-        )
-        payload = models.EmailPayload(subject=subject, email_list=email_list, body=body, options=options)
-        print("*"*50,"payload main.py","*"*50)
-        print(payload)
-        # Send the email information via the API
-        self.send_email_via_api(payload, options)
-
-        # Continue with the rest of your application logic
-        # ...
-
-    #******************* end api sections **************************
-    
     #********************* End Compose Emails *******************#
     
     def Generate_data(self, line):
